@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.yupi.yupicturebackend.models.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.yupicturebackend.models.dto.user.UserQueryRequest;
-import com.yupi.yupicturebackend.models.vo.LoginUserVO;
-import com.yupi.yupicturebackend.models.vo.UserVO;
+import com.yupi.yupicturebackend.models.vo.user.LoginUserVO;
+import com.yupi.yupicturebackend.models.vo.user.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -86,6 +86,15 @@ public interface UserService extends IService<User> {
      * @return 当前登录用户
      */
     User getLoginUser(HttpServletRequest request);
+
+    /**
+     * 是否为管理员
+     *
+     * @param user
+     * @return
+     */
+    boolean isAdmin(User user);
+
 
 
 }

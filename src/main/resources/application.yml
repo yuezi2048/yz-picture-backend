@@ -6,6 +6,12 @@ server:
 spring:
   application:
     name: yu-picture-backend
+  #  也可通过运行时配置参数
+  profiles:
+    active: local
+  servlet:
+    multipart:
+      max-file-size: 10MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/yu_picture

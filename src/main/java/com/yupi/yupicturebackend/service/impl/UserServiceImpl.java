@@ -11,8 +11,8 @@ import com.yupi.yupicturebackend.exception.ThrowUtils;
 import com.yupi.yupicturebackend.models.domain.User;
 import com.yupi.yupicturebackend.models.dto.user.UserQueryRequest;
 import com.yupi.yupicturebackend.models.enums.UserRoleEnum;
-import com.yupi.yupicturebackend.models.vo.LoginUserVO;
-import com.yupi.yupicturebackend.models.vo.UserVO;
+import com.yupi.yupicturebackend.models.vo.user.LoginUserVO;
+import com.yupi.yupicturebackend.models.vo.user.UserVO;
 import com.yupi.yupicturebackend.service.UserService;
 import com.yupi.yupicturebackend.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -179,6 +179,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         ThrowUtils.throwIf(currentUser == null, ErrorCode.NOT_FOUND_ERROR);
 
         return currentUser;
+    }
+
+    @Override
+    public boolean isAdmin(User user) {
+        return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
     }
 
 

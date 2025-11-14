@@ -1,4 +1,4 @@
-package com.yupi.yupicturebackend.manager;
+package com.yupi.yupicturebackend.manager.upload;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
@@ -9,61 +9,34 @@ import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
 import com.yupi.yupicturebackend.config.CosClientConfig;
 import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
-import com.yupi.yupicturebackend.exception.ThrowUtils;
-import com.yupi.yupicturebackend.manager.upload.FilePictureUpload;
-import com.yupi.yupicturebackend.manager.upload.UrlPictureUpload;
+import com.yupi.yupicturebackend.manager.CosManager;
 import com.yupi.yupicturebackend.models.dto.file.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
-@Service
 @Slf4j
-public class FileManager {
+public abstract class PictureUploadTemplate {
 
     @Resource
-    private CosClientConfig cosClientConfig;
+    protected CosManager cosManager;
 
     @Resource
-    private CosManager cosManager;
-
-    @Resource
-    private FilePictureUpload filePictureUpload;
-
-    @Resource
-    private UrlPictureUpload urlPictureUpload;
-
-    public UploadPictureResult uploadPicture(Object inputSource, String uploadPathPrefix) {
-        if (inputSource instanceof String) {
-            String url = (String) inputSource;
-            return urlPictureUpload.uploadPicture(url, uploadPathPrefix);
-        } else {
-            return filePictureUpload.uploadPicture(inputSource, uploadPathPrefix);
-        }
-    }
-
+    protected CosClientConfig cosClientConfig;
 
     /**
-     * 上传图片
-     *
-     * @param multipartFile    文件
-     * @param uploadPathPrefix 上传路径前缀
-     * @return
+     * 模板方法，定义上传流程
      */
-    @Deprecated
-    public UploadPictureResult uploadPictureDeprecated(MultipartFile multipartFile, String uploadPathPrefix) {
+    public final UploadPictureResult uploadPicture(Object inputSource, String uploadPathPrefix) {
 
         // 1. 校验文件
-        validPicture(multipartFile);
+        validPicture(inputSource);
+
         // 2. 设置图片上传地址
         String uuid = RandomUtil.randomString(16);
-        String originFilename = multipartFile.getOriginalFilename();
+        String originFilename = this.getOriginalFilename(inputSource);
         String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid, FileUtil.getSuffix(originFilename));
         // TODO 设计枚举类FileUploadBizEnum 根据业务场景区分上传路径，校验规则
         String uploadPath = String.format("/%s/%s", uploadPathPrefix, uploadFilename);
@@ -72,11 +45,11 @@ public class FileManager {
         File file = null;
         try {
             // TODO 用流的形式将请求的文件上传到COS
-            // 创建临时文件
+            // 3.1 创建临时文件
             file = File.createTempFile(uploadPath, null);
-            multipartFile.transferTo(file);
+            this.processFile(inputSource, file);
 
-            // 上传
+            // 3.2 上传到COS
             PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
             return getUploadPictureResult(imageInfo, uploadPath, originFilename, file);
@@ -88,7 +61,34 @@ public class FileManager {
         }
     }
 
-    @Deprecated
+    /**
+     * 校验文件
+     * @param inputSource
+     */
+    protected abstract void validPicture(Object inputSource);
+
+    /**
+     * 获取原始文件名
+     * @param inputSource
+     */
+    protected abstract String getOriginalFilename(Object inputSource);
+
+    /**
+     * 处理输入源，生成本地临时文件
+     * @param inputSource
+     * @param file
+     */
+    protected abstract void processFile(Object inputSource, File file);
+
+    /**
+     * 获取上传图片结果
+     *
+     * @param imageInfo
+     * @param uploadPath
+     * @param originFilename
+     * @param file
+     * @return
+     */
     private UploadPictureResult getUploadPictureResult(ImageInfo imageInfo, String uploadPath, String originFilename, File file) {
         int picWidth = imageInfo.getWidth();
         int picHeight = imageInfo.getHeight();
@@ -106,30 +106,8 @@ public class FileManager {
     }
 
     /**
-     * 校验文件
-     *
-     * @param multipartFile multipart 文件
-     */
-    @Deprecated
-    public void validPicture(MultipartFile multipartFile) {
-
-        // TODO 为图片格式添加枚举，仅允许上传枚举定义的格式
-        ThrowUtils.throwIf(multipartFile == null, ErrorCode.PARAMS_ERROR, "文件不能为空");
-        // 1. 校验文件大小
-        long fileSize = multipartFile.getSize();
-        final long ONE_M = 1024 * 1024L;
-        ThrowUtils.throwIf(fileSize > 2 * ONE_M, ErrorCode.PARAMS_ERROR, "文件大小不能超过 2M");
-        // 2. 校验文件后缀
-        String fileSuffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
-        // 允许上传的文件后缀
-        final List<String> ALLOW_FORMAT_LIST = Arrays.asList("jpeg", "jpg", "png", "webp");
-        ThrowUtils.throwIf(!ALLOW_FORMAT_LIST.contains(fileSuffix), ErrorCode.PARAMS_ERROR, "文件类型错误");
-    }
-
-    /**
      * 删除临时文件
      */
-    @Deprecated
     public void deleteTempFile(File file) {
         if (file == null) {
             return;
@@ -139,6 +117,4 @@ public class FileManager {
             log.error("file delete error, filepath = {}", file.getAbsolutePath());
         }
     }
-
-
 }

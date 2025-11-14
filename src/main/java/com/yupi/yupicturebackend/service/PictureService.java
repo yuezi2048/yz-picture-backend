@@ -6,6 +6,8 @@ import com.yupi.yupicturebackend.models.domain.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.yupicturebackend.models.domain.User;
 import com.yupi.yupicturebackend.models.dto.picture.PictureQueryRequest;
+import com.yupi.yupicturebackend.models.dto.picture.PictureReviewRequest;
+import com.yupi.yupicturebackend.models.dto.picture.PictureUploadByBatchRequest;
 import com.yupi.yupicturebackend.models.dto.picture.PictureUploadRequest;
 import com.yupi.yupicturebackend.models.vo.picture.PictureVO;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,12 +24,12 @@ public interface PictureService extends IService<Picture> {
     /**
      * 上传图片
      *
-     * @param multipartFile
+     * @param inputSource
      * @param pictureUploadRequest
      * @param loginUser
      * @return
      */
-    PictureVO uploadPicture(MultipartFile multipartFile,
+    PictureVO uploadPicture(Object inputSource,
                             PictureUploadRequest pictureUploadRequest,
                             User loginUser);
 
@@ -57,5 +59,25 @@ public interface PictureService extends IService<Picture> {
      */
     Page<PictureVO> getPictureVOPage(Page<Picture> picturePage, HttpServletRequest request);
 
+    /**
+     * 图片审核
+     *
+     * @param pictureReviewRequest
+     * @param loginUser
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
+    /**
+     * 批量抓取和创建图片
+     *
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     * @return 成功创建的图片数
+     */
+    Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
+
+
     void validPicture(Picture picture);
+
+    void fillReviewParams(Picture picture, User loginUser);
 }

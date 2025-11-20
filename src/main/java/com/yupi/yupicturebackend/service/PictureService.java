@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.yupicturebackend.models.domain.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.yupicturebackend.models.domain.User;
-import com.yupi.yupicturebackend.models.dto.picture.PictureQueryRequest;
-import com.yupi.yupicturebackend.models.dto.picture.PictureReviewRequest;
-import com.yupi.yupicturebackend.models.dto.picture.PictureUploadByBatchRequest;
-import com.yupi.yupicturebackend.models.dto.picture.PictureUploadRequest;
+import com.yupi.yupicturebackend.models.dto.picture.*;
 import com.yupi.yupicturebackend.models.vo.picture.PictureVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,6 +37,23 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     public QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
+
+    /**
+     * 删除图片
+     *
+     * @param pictureId
+     * @param loginUser
+     */
+    void deletePicture(long pictureId, User loginUser);
+
+    /**
+     * 编辑图片
+     *
+     * @param pictureEditRequest
+     * @param loginUser
+     */
+    void editPicture(PictureEditRequest pictureEditRequest, User loginUser);
+
 
     /**
      * 获取单条图片结果
@@ -86,4 +100,7 @@ public interface PictureService extends IService<Picture> {
     void validPicture(Picture picture);
 
     void fillReviewParams(Picture picture, User loginUser);
+
+    void checkPictureAuth(Picture picture, User loginUser);
+
 }

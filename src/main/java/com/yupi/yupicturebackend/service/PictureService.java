@@ -2,6 +2,8 @@ package com.yupi.yupicturebackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yupi.yupicturebackend.api.aliyun.model.CreateOutPaintingTaskRequest;
+import com.yupi.yupicturebackend.api.aliyun.model.CreateOutPaintingTaskResponse;
 import com.yupi.yupicturebackend.models.domain.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.yupicturebackend.models.domain.User;
@@ -116,9 +118,21 @@ public interface PictureService extends IService<Picture> {
      */
     void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
 
+    /**
+     * 创建扩图任务
+     *
+     * @param createPictureOutPaintingTaskRequest
+     * @param loginUser
+     * @return
+     */
+    CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest,
+                                                        User loginUser);
+
     void validPicture(Picture picture);
 
     void fillReviewParams(Picture picture, User loginUser);
 
     void checkPictureAuth(Picture picture, User loginUser);
+
+
 }

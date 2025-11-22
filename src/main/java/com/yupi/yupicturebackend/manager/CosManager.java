@@ -65,6 +65,8 @@ public class CosManager {
         // 图片压缩（转换成webp格式）
         String webpKey = FileUtil.mainName(key) + ".webp";
         PicOperations.Rule compressRule = new PicOperations.Rule();
+        // OPTION：设置压缩的最小宽高，适应AI扩图的最小图片要求
+        // compressRule.setRule("imageMogr2/thumbnail/!512×512r/min/format/webp");
         compressRule.setRule("imageMogr2/format/webp");
         compressRule.setBucket(cosClientConfig.getBucket());
         compressRule.setFileId(webpKey);

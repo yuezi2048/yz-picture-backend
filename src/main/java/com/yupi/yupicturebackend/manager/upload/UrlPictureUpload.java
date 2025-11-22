@@ -3,6 +3,7 @@ package com.yupi.yupicturebackend.manager.upload;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpStatus;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.http.Method;
 import com.yupi.yupicturebackend.exception.BusinessException;
@@ -38,8 +39,9 @@ public class UrlPictureUpload extends PictureUploadTemplate {
                     .setReadTimeout(TIMEOUT)        // Read timeout
                     .execute();
 
-            if (!response.isOk()) {
-                throw new BusinessException(ErrorCode.OPERATION_ERROR, "文件请求操作失败");
+            // 如果请求HEAD失败，直接返回即可
+            if (response.getStatus() != HttpStatus.HTTP_OK) {
+                return ;
             }
 
             // 3. 校验文件类型（对于文件头有才校验）

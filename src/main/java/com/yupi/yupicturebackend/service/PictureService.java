@@ -10,12 +10,13 @@ import com.yupi.yupicturebackend.models.vo.picture.PictureVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
-* @author ljy
-* @description 针对表【picture(图片)】的数据库操作Service
-* @createDate 2025-11-12 19:55:43
-*/
+ * @author ljy
+ * @description 针对表【picture(图片)】的数据库操作Service
+ * @createDate 2025-11-12 19:55:43
+ */
 public interface PictureService extends IService<Picture> {
 
     /**
@@ -97,10 +98,27 @@ public interface PictureService extends IService<Picture> {
      */
     void clearPictureFile(Picture oldPicture);
 
+    /**
+     * 通过颜色搜索相似的图片
+     *
+     * @param spaceId
+     * @param picColor
+     * @param loginUser
+     * @return
+     */
+    List<PictureVO> searchPictureByColor(Long spaceId, String picColor, User loginUser);
+
+    /**
+     * 批量编辑图片
+     *
+     * @param pictureEditByBatchRequest
+     * @param loginUser
+     */
+    void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
+
     void validPicture(Picture picture);
 
     void fillReviewParams(Picture picture, User loginUser);
 
     void checkPictureAuth(Picture picture, User loginUser);
-
 }

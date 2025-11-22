@@ -14,6 +14,7 @@ import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
 import com.yupi.yupicturebackend.manager.CosManager;
 import com.yupi.yupicturebackend.models.dto.file.UploadPictureResult;
+import com.yupi.yupicturebackend.utils.HexColorExpander;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
@@ -65,7 +66,7 @@ public abstract class PictureUploadTemplate {
                 if (objectList.size() > 1) {
                     thumbnailCiObject = objectList.get(1);
                 }
-                return buildResult(originFilename, compressCiObject, thumbnailCiObject);
+                return buildResult(originFilename, compressCiObject, thumbnailCiObject, imageInfo);
             }
             return buildResult(imageInfo, uploadPath, originFilename, file);
         } catch (Exception e) {
@@ -78,18 +79,21 @@ public abstract class PictureUploadTemplate {
 
     /**
      * 校验文件
+     *
      * @param inputSource
      */
     protected abstract void validPicture(Object inputSource);
 
     /**
      * 获取原始文件名
+     *
      * @param inputSource
      */
     protected abstract String getOriginalFilename(Object inputSource);
 
     /**
      * 处理输入源，生成本地临时文件
+     *
      * @param inputSource
      * @param file
      */
@@ -117,6 +121,7 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);
         uploadPictureResult.setPicFormat(imageInfo.getFormat());
+        uploadPictureResult.setPicColor(HexColorExpander.expandHexColor(imageInfo.getAve()));
         return uploadPictureResult;
     }
 
@@ -127,7 +132,7 @@ public abstract class PictureUploadTemplate {
      * @param compressedCiObject
      * @return
      */
-    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, CIObject thumbnailCiObject) {
+    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, CIObject thumbnailCiObject, ImageInfo imageInfo) {
         UploadPictureResult uploadPictureResult = new UploadPictureResult();
         int picWidth = compressedCiObject.getWidth();
         int picHeight = compressedCiObject.getHeight();
@@ -138,6 +143,7 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicScale(picScale);
         uploadPictureResult.setPicFormat(compressedCiObject.getFormat());
         uploadPictureResult.setPicSize(compressedCiObject.getSize().longValue());
+        uploadPictureResult.setPicColor(HexColorExpander.expandHexColor(imageInfo.getAve()));
         // 设置图片为压缩后的地址
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
         // 设置缩略图的地址

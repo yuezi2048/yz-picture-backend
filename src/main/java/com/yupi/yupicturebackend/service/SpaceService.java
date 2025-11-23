@@ -3,13 +3,10 @@ package com.yupi.yupicturebackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.yupi.yupicturebackend.models.domain.Picture;
 import com.yupi.yupicturebackend.models.domain.Space;
 import com.yupi.yupicturebackend.models.domain.User;
-import com.yupi.yupicturebackend.models.dto.picture.PictureQueryRequest;
 import com.yupi.yupicturebackend.models.dto.space.SpaceAddRequest;
 import com.yupi.yupicturebackend.models.dto.space.SpaceQueryRequest;
-import com.yupi.yupicturebackend.models.vo.picture.PictureVO;
 import com.yupi.yupicturebackend.models.vo.space.SpaceVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -70,4 +67,12 @@ public interface SpaceService extends IService<Space> {
      * @return
      */
     Page<SpaceVO> getSpaceVOPage(Page<Space> spacePage, HttpServletRequest request);
+
+    /**
+     * 校验空间权限
+     *
+     * @param loginUser
+     * @param space
+     */
+    void checkSpaceAuth(User loginUser, Space space);
 }

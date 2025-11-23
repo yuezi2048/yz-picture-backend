@@ -16,7 +16,6 @@ import com.yupi.yupicturebackend.models.domain.User;
 import com.yupi.yupicturebackend.models.dto.space.SpaceAddRequest;
 import com.yupi.yupicturebackend.models.dto.space.SpaceQueryRequest;
 import com.yupi.yupicturebackend.models.enums.SpaceLevelEnum;
-import com.yupi.yupicturebackend.models.vo.picture.PictureVO;
 import com.yupi.yupicturebackend.models.vo.space.SpaceVO;
 import com.yupi.yupicturebackend.models.vo.user.UserVO;
 import com.yupi.yupicturebackend.service.SpaceService;
@@ -186,6 +185,14 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         });
         spaceVOPage.setRecords(spaceVOList);
         return spaceVOPage;
+    }
+
+    @Override
+    public void checkSpaceAuth(User loginUser, Space space) {
+        // 仅本人或管理员可操作对应空间
+        if (!space.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
     }
 }
 

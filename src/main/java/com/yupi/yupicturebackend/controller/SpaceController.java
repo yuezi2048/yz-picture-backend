@@ -2,6 +2,8 @@ package com.yupi.yupicturebackend.controller;
 
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -14,14 +16,18 @@ import com.yupi.yupicturebackend.constant.UserConstant;
 import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
 import com.yupi.yupicturebackend.exception.ThrowUtils;
+import com.yupi.yupicturebackend.manager.auth.SpaceUserAuthManager;
 import com.yupi.yupicturebackend.models.domain.Space;
+import com.yupi.yupicturebackend.models.domain.SpaceUser;
 import com.yupi.yupicturebackend.models.domain.User;
 import com.yupi.yupicturebackend.models.dto.picture.PictureUploadRequest;
 import com.yupi.yupicturebackend.models.dto.space.*;
 import com.yupi.yupicturebackend.models.enums.SpaceLevelEnum;
+import com.yupi.yupicturebackend.models.enums.SpaceTypeEnum;
 import com.yupi.yupicturebackend.models.vo.picture.PictureVO;
 import com.yupi.yupicturebackend.models.vo.space.SpaceVO;
 import com.yupi.yupicturebackend.service.SpaceService;
+import com.yupi.yupicturebackend.service.SpaceUserService;
 import com.yupi.yupicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -49,6 +55,12 @@ public class SpaceController {
 
     @Resource
     SpaceService spaceService;
+
+    @Resource
+    SpaceUserAuthManager spaceUserAuthManager;
+
+    @Resource
+    SpaceUserService spaceUserService;
 
     /**
      * 添加空间
@@ -84,6 +96,11 @@ public class SpaceController {
         boolean result = spaceService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         // spaceService.clearSpaceFile(oldSpace);
+        if (oldSpace.getSpaceType() == SpaceTypeEnum.TEAM.getValue()) {
+            LambdaQueryWrapper<SpaceUser> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(SpaceUser::getSpaceId, id);
+            spaceUserService.remove(queryWrapper);
+        }
         return ResultUtils.success(true);
     }
 
@@ -139,7 +156,12 @@ public class SpaceController {
         Space space = spaceService.getById(id);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
         // 获取封装类
-        return ResultUtils.success(spaceService.getSpaceVO(space, request));
+        SpaceVO spaceVO = spaceService.getSpaceVO(space, request);
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser);
+        spaceVO.setPermissionList(permissionList);
+        // 获取封装类
+        return ResultUtils.success(spaceVO);
     }
 
     /**
@@ -171,7 +193,11 @@ public class SpaceController {
         Page<Space> spacePage = spaceService.page(new Page<>(current, size),
                 spaceService.getQueryWrapper(spaceQueryRequest));
         // 获取封装类
-        return ResultUtils.success(spaceService.getSpaceVOPage(spacePage, request));
+        return ResultUtils.success(getSpaceVOPage(request, spacePage));
+    }
+
+    private Page<SpaceVO> getSpaceVOPage(HttpServletRequest request, Page<Space> spacePage) {
+        return spaceService.getSpaceVOPage(spacePage, request);
     }
 
     /**

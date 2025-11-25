@@ -59,7 +59,7 @@ public class GetImageFirstUrlApi {
                 }
             }
 
-            if (result[0] == null) {
+            if (result[0] == null && result[1] == null) {
                 throw new BusinessException(ErrorCode.OPERATION_ERROR, "未找到 url");
             }
 

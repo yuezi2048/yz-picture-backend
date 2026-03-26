@@ -62,7 +62,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
-        user.setUserName("无名");
+        user.setUserName(userAccount);
         user.setUserRole(UserRoleEnum.USER.getValue());
 
         boolean save = this.save(user);

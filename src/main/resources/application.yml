@@ -22,7 +22,7 @@ spring:
     password: Aa147147+
   redis:
     database: 0
-    host: 127.0.0.1
+    host: 172.28.166.17
     port: 6379
     timeout: 5000
   session:

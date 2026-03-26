@@ -28,10 +28,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -140,22 +137,39 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
                 .collect(Collectors.groupingBy(User::getId));
         Map<Long, List<Space>> spaceIdSpaceListMap = spaceService.listByIds(spaceIdSet).stream()
                 .collect(Collectors.groupingBy(Space::getId));
-        // 3. 填充 SpaceUserVO 的用户和空间信息
+        // 3. 收集所有需要查询的创建者用户 ID（来自空间的 userId）
+        Set<Long> spaceCreatorUserIdSet = spaceIdSpaceListMap.values().stream()
+                .flatMap(List::stream)
+                .map(Space::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        // 4. 批量查询空间的创建者用户
+        Map<Long, List<User>> spaceCreatorUserMap = userService.listByIds(spaceCreatorUserIdSet).stream()
+                .collect(Collectors.groupingBy(User::getId));
+        // 5. 填充 SpaceUserVO 的用户和空间信息
         spaceUserVOList.forEach(spaceUserVO -> {
             Long userId = spaceUserVO.getUserId();
             Long spaceId = spaceUserVO.getSpaceId();
-            // 填充用户信息
+            // 填充用户信息（SpaceUser 关联的用户）
             User user = null;
             if (userIdUserListMap.containsKey(userId)) {
                 user = userIdUserListMap.get(userId).get(0);
             }
             spaceUserVO.setUser(userService.getUserVO(user));
-            // 填充空间信息
+            // 填充空间信息（避免循环查询）
             Space space = null;
             if (spaceIdSpaceListMap.containsKey(spaceId)) {
                 space = spaceIdSpaceListMap.get(spaceId).get(0);
+                // 手动构建 SpaceVO，而不是调用 spaceService.getSpaceVO() 避免重复查询 user
+                SpaceVO spaceVO = SpaceVO.objToVo(space);
+                // 填充空间的创建者用户信息
+                Long spaceCreatorId = space.getUserId();
+                if (spaceCreatorId != null && spaceCreatorUserMap.containsKey(spaceCreatorId)) {
+                    User spaceCreator = spaceCreatorUserMap.get(spaceCreatorId).get(0);
+                    spaceVO.setUser(userService.getUserVO(spaceCreator));
+                }
+                spaceUserVO.setSpace(spaceVO);
             }
-            spaceUserVO.setSpace(SpaceVO.objToVo(space));
         });
         return spaceUserVOList;
     }
